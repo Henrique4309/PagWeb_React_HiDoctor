@@ -15,6 +15,7 @@ function Cadastro() {
 		idade: "",
 		peso: "",
 		altura: "",
+		enfermidade: "",
 		historico: "",
 	});
 	const [erro, setErro] = useState("");
@@ -61,6 +62,7 @@ function Cadastro() {
 						idade: Number(formulario.idade),
 						peso: Number(formulario.peso),
 						altura: Number(formulario.altura),
+						enfermidade: formulario.enfermidade.trim(),
 						historico,
 					},
 				}),
@@ -115,6 +117,10 @@ function Cadastro() {
 							<label className="space-y-1 text-xs font-medium text-slate-600">
 								Altura (m)
 								<input className={classesInput} name="altura" type="number" min="0" step="0.01" value={formulario.altura} onChange={atualizarCampo} required />
+							</label>
+							<label className="space-y-1 text-xs font-medium text-slate-600 sm:col-span-1">
+								Enfermidade
+								<input className={classesInput} name="enfermidade" value={formulario.enfermidade} onChange={atualizarCampo} required />
 							</label>
 							<label className="space-y-1 text-xs font-medium text-slate-600 sm:col-span-2">
 								Histórico médico (opcional)

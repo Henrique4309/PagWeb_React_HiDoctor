@@ -44,6 +44,7 @@ function Login() {
         "hidoc_usuario",
         JSON.stringify({
           id: usuario.id,
+          cpf: String(usuario.cpf ?? "").replace(/\D/g, ""),
           nome: usuario.nome,
           url: usuario.url,
           tipo: ehAdmin ? "medico" : "paciente",
