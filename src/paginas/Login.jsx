@@ -66,78 +66,78 @@ function Login() {
   return (
     <main className="flex min-h-screen flex-col bg-[#E6F4F1] px-4 pb-10 pt-16">
       <header className="mb-8 text-center">
-        <img
-          className="mx-auto w-full "
-          src={logo}
-          alt=""
-        />
+       
       </header>
-      <section className= "mt-10 xl:flex xl:items-center xl:justify-between">
-        <form className="space-y-5 xl:flex xl:flex-col xl:w-1/2 xl:ml-30" onSubmit={entrar}>
-          <div className="space-y-1">
-            <label
-              className="block text-sm font-medium text-slate-700"
-              htmlFor="cpf"
+      <section className= "mt-10 xl:flex xl:gap-40 xl:items-center xl:justify mx-auto">
+         <div className="xl:flex-col xl:items-center max-w-[650px]">
+           <img
+            className="mx-auto "
+            src={logo}
+            alt=""
+                   />
+                   <form className="space-y-5 xl:flex xl:flex-col xl:ml-30" onSubmit={entrar}>
+            <div className="space-y-1">
+              <label
+                className="block text-sm font-medium text-slate-700"
+                htmlFor="cpf"
+              >
+                CPF
+              </label>
+              <input
+                className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)]
+                focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)]
+                text-slate-800 px-6 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2
+                ring-[#48799C] shadow-bottom  shadow-neutral-300 placeholder:text-sm"
+                id="cpf"
+                name="cpf"
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
+                inputMode="numeric"
+                required
+                placeholder="046.."
+              />
+            </div>
+            <div className="space-y-1">
+              <label
+                className="block text-sm font-medium text-slate-700"
+                htmlFor="senha"
+              >
+                Senha
+              </label>
+              <input
+                className="w-full  bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 px-6 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-bottom  shadow-neutral-300"
+                id="senha"
+                name="senha"
+                type="password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+              />
+            </div>
+            {erro && (
+              <p
+                className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700"
+                role="alert"
+              >
+                {erro}
+              </p>
+            )}
+            <button
+              className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 px-6 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-bottom  shadow-neutral-30 xl:mt-30 xl:px-30"
+              type="submit"
+              disabled={carregando}
             >
-              CPF
-            </label>
-            <input
-              className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)]
-              focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)]
-              text-slate-800 px-6 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2
-              ring-[#48799C] shadow-bottom  shadow-neutral-300 placeholder:text-sm"
-              id="cpf"
-              name="cpf"
-              value={cpf}
-              onChange={(e) => setCpf(e.target.value)}
-              inputMode="numeric"
-              required
-              placeholder="046.."
-            />
-          </div>
-          <div className="space-y-1">
-            <label
-              className="block text-sm font-medium text-slate-700"
-              htmlFor="senha"
-            >
-              Senha
-            </label>
-            <input
-              className="w-full  bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 px-6 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-bottom  shadow-neutral-300"
-              id="senha"
-              name="senha"
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              required
-            />
-          </div>
-          {erro && (
-            <p
-              className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700"
-              role="alert"
-            >
-              {erro}
+              {carregando ? "Verificando..." : "Entrar"}
+            </button>
+            <p className="text-center text-sm text-slate-600">
             </p>
-          )}
-          <button
-            className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 px-6 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-bottom  shadow-neutral-30 xl:mt-30 xl:px-30"
-            type="submit"
-            disabled={carregando}
-          >
-            {carregando ? "Verificando..." : "Entrar"}
-          </button>
-          <p className="text-center text-sm text-slate-600">
-            Ainda não tem cadastro?{" "}
-            <Link className="font-semibold text-[#365f7a] underline" to="/cadastro">
-              Cadastre-se
-            </Link>
-          </p>
-        </form>
-      <div className="hidden xl:block ">
+                   </form>
+         </div>
+      <div className="hidden xl:block mt-28 ">
         <img src="src/assets/hidoctor_login_enfermeiro_senhor 1.png" alt="" />
       </div>
       </section>
+      
     </main>
   );
 }
