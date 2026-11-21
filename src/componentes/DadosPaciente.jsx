@@ -168,7 +168,7 @@ function DadosPaciente({ paciente, onVoltar }) {
         </div>
       </section>
 
-      <div className="w-full xl:grid xl:grid-cols-[minmax(320px,1fr)_2fr_1fr] xl:items-start xl:px-20 xl:mb-10 xl:gap-8">
+      <div className="w-full xl:grid xl:grid-cols-[1fr_2fr_1fr] xl:gap-16 xl:items-start xl:px-10">
         <section>
 
           <section className="w-[80%] max-w-[370px] mt-6 mx-auto xl:col-start-3 xl:row-start-1 xl:mt-8 xl:w-full xl:max-w-[420px] ">

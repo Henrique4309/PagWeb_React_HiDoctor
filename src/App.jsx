@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./paginas/Login";
 import HomePaciente from "./paginas/HomePaciente";
 import HomeFuncionario from "./paginas/HomeFuncionario";
-import Cadastro from "./paginas/cadastro";
+import Cadastro from "./paginas/Cadastro";
 
 export default function App() {
   return (

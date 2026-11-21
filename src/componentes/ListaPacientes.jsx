@@ -33,7 +33,7 @@ function carregarPacientesPrioritarios(medicoId) {
     }
 }
 
-function ListarPacientes({ medicoId }) {
+function ListarPacientes({ medicoId, aoMudarSemResultado }) {
     const [pacientes, setPacientes] = useState([]);
     const [pacienteSelecionado, setPacienteSelecionado] = useState(null);
     const [busca, setBusca] = useState("");
@@ -107,15 +107,6 @@ function ListarPacientes({ medicoId }) {
         }
     }
 
-    if (pacienteSelecionado) {
-        return (
-            <DadosPaciente
-                paciente={pacienteSelecionado}
-                onVoltar={() => setPacienteSelecionado(null)}
-            />
-        );
-    }
-
     const termoBusca = busca.trim().toLowerCase();
     const pacientesFiltrados = termoBusca
         ? pacientes.filter(
@@ -127,6 +118,21 @@ function ListarPacientes({ medicoId }) {
           )
         : pacientes;
 
+    // Avisa a página quando nenhum paciente aparece na lista (para trocar o fundo do main)
+    const semResultado = !pacienteSelecionado && pacientesFiltrados.length === 0;
+    useEffect(() => {
+        aoMudarSemResultado?.(semResultado);
+    }, [semResultado, aoMudarSemResultado]);
+
+    if (pacienteSelecionado) {
+        return (
+            <DadosPaciente
+                paciente={pacienteSelecionado}
+                onVoltar={() => setPacienteSelecionado(null)}
+            />
+        );
+    }
+
     return (
         <>
         <div className="w-[95%] xl:w-[60%] mx-auto my-6 relative">
@@ -137,13 +143,10 @@ function ListarPacientes({ medicoId }) {
                 onChange={(evento) => setBusca(evento.target.value)}
                 placeholder="Buscar por nome ou enfermidade"
                 aria-label="Buscar paciente por nome ou enfermidade"
-                className="w-full rounded-xl border py-3 pl-12 pr-4 shadow-md outline-none focus:ring-2 focus:ring-[#CBE6F2]"
+                className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 py-3 pl-12 pr-4 rounded-xl font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-md"
             />
         </div>
         <div className="w-[95%] m-auto grid grid-cols-1 align-items-center justify-items-center xl:grid-cols-3 gap-4">
-            {pacientesFiltrados.length === 0 && (
-                <p className="col-span-full text-gray-500">Nenhum paciente encontrado.</p>
-            )}
             {pacientesFiltrados.map((paciente) => (
                 <div
                     role="button"

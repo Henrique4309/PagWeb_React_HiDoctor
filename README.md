@@ -3,7 +3,7 @@
 Altere o endereço do JSON Server em `src/config.js`:
 
 ```js
-export const JSON_SERVER_URL = "http://localhost:3000";
+export const JSON_SERVER_URL = "https://api-hidoctor.onrender.com";
 ```
 
 A aplicação acrescenta `/users` automaticamente. A coleção `users` deve conter `cpf`, `senha` e, opcionalmente, `nome`. Consulte `db.json.example`.

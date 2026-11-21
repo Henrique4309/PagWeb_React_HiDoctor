@@ -29,12 +29,23 @@ function Login() {
         throw new Error("CPF ou senha incorretos.");
 
       const tipoUsuario = String(usuario.tipo || "").trim().toLowerCase();
-      const ehAdmin = ["admin", "adm", "administrador", "medico"].includes(
-        tipoUsuario,
-      );
+      const ehAdmin = ["admin", "adm", "administrador"].includes(tipoUsuario);
+      const ehMedico = tipoUsuario === "medico";
       const ehPaciente = ["paciente", "patient"].includes(tipoUsuario);
 
-      if (!ehAdmin && !ehPaciente) {
+      // Tipo salvo na sessão e página de destino de cada perfil
+      let tipoSessao;
+      let destino;
+      if (ehAdmin) {
+        tipoSessao = "admin";
+        destino = "/cadastro";
+      } else if (ehMedico) {
+        tipoSessao = "medico";
+        destino = "/medico";
+      } else if (ehPaciente) {
+        tipoSessao = "paciente";
+        destino = "/home";
+      } else {
         throw new Error(
           "Perfil não reconhecido. Confira o campo tipo no cadastro do usuário.",
         );
@@ -47,10 +58,10 @@ function Login() {
           cpf: String(usuario.cpf ?? "").replace(/\D/g, ""),
           nome: usuario.nome,
           url: usuario.url,
-          tipo: ehAdmin ? "medico" : "paciente",
+          tipo: tipoSessao,
         }),
       );
-      navigate(ehAdmin ? "/medico" : "/home");
+      navigate(destino);
     } catch (error) {
       const mensagem =
         error.message === "Erro ao consultar os usuários"
