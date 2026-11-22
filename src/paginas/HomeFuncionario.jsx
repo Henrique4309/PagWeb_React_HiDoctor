@@ -4,6 +4,8 @@ import ListaPacientes from "../componentes/ListaPacientes";
 import { Header, Footer } from "../componentes/BarraNavegacao";
 import Erro404 from "../componentes/Erro404";
 import imagemPacienteNaoEncontrado from "../assets/Paciente não encontrado no oceano.png";
+import AlertaEmergencia from "../componentes/AlertaEmergencia";
+import { useAlertas } from "../hooks/useAlertas";
 
 function HomeFuncionario() {
 	const usuario = JSON.parse(sessionStorage.getItem("hidoc_usuario") || "null");
@@ -14,6 +16,8 @@ function HomeFuncionario() {
 	const [semPacientes, setSemPacientes] = useState(false);
 	const mostrarFundoNaoEncontrado = tela === "inicio" && semPacientes;
 	const podeAcessar = usuario && ["medico"].includes(usuario.tipo);
+	// Alertas de emergência de qualquer paciente, para todos os médicos
+	const { alerta, paciente: pacienteAlerta, fecharAlerta } = useAlertas();
 
 	useEffect(() => {
 		if (!podeAcessar) {
@@ -47,6 +51,13 @@ function HomeFuncionario() {
 			</main>
 
 			<Footer aoNavegar={setTela} />
+
+			{/* Cobre a tela inteira enquanto houver alerta pendente */}
+			<AlertaEmergencia
+				alerta={alerta}
+				paciente={pacienteAlerta}
+				aoFechar={fecharAlerta}
+			/>
 		</div>
 	);
 }

@@ -37,6 +37,8 @@ function ListarPacientes({ medicoId, aoMudarSemResultado }) {
     const [pacientes, setPacientes] = useState([]);
     const [pacienteSelecionado, setPacienteSelecionado] = useState(null);
     const [busca, setBusca] = useState("");
+    // false até a primeira busca de pacientes terminar
+    const [carregou, setCarregou] = useState(false);
     const [pacientesPrioritarios, setPacientesPrioritarios] = useState(() =>
         carregarPacientesPrioritarios(medicoId),
     );
@@ -63,6 +65,8 @@ function ListarPacientes({ medicoId, aoMudarSemResultado }) {
                 );
             } catch (erro) {
                 console.log("Erro: " + erro.message);
+            } finally {
+                setCarregou(true);
             }
         }
         buscarPaciente();
@@ -119,7 +123,9 @@ function ListarPacientes({ medicoId, aoMudarSemResultado }) {
         : pacientes;
 
     // Avisa a página quando nenhum paciente aparece na lista (para trocar o fundo do main)
-    const semResultado = !pacienteSelecionado && pacientesFiltrados.length === 0;
+    // Só avisa depois do carregamento, para a imagem não piscar ao abrir a página
+    const semResultado =
+        carregou && !pacienteSelecionado && pacientesFiltrados.length === 0;
     useEffect(() => {
         aoMudarSemResultado?.(semResultado);
     }, [semResultado, aoMudarSemResultado]);
