@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { USERS_ENDPOINT } from "../config";
+import { usersEndpoint } from "../config";
+import { lerUsuarioSessao } from "../sessao";
 
 const classesInput =
 	"w-full rounded-md border border-[#D5E4E5] bg-gradient-to-b from-white to-[#E3F1F1] px-4 py-3 text-sm text-slate-800 shadow-md xl:text-lg outline-none transition focus:border-[#6C9DB5] focus:ring-2 focus:ring-[#48799C]";
 
-// Mesmo degradê dos botões do login e da barra de navegação.
-// O botão do formulário aberto fica com o degradê "selecionado" fixo.
 const classesBotaoTroca =
-	"w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 px-5 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-bottom shadow-neutral-30 xl:text-xl";
+	"w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 px-5 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-bottom xl:text-xl";
 const classesBotaoTrocaAtivo =
 	"!bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] ring-2";
 
@@ -25,11 +24,9 @@ const formularioVazio = {
 };
 
 function Cadastro() {
-	// Só o admin pode acessar o cadastro
-	const usuario = JSON.parse(sessionStorage.getItem("hidoc_usuario") || "null");
+	const [usuario] = useState(lerUsuarioSessao);
 	const podeAcessar = usuario?.tipo === "admin";
 
-	// Qual formulário está aberto: "paciente" ou "medico"
 	const [tipoCadastro, setTipoCadastro] = useState("paciente");
 	const ehPaciente = tipoCadastro === "paciente";
 	const [formulario, setFormulario] = useState(formularioVazio);
@@ -63,7 +60,7 @@ function Cadastro() {
 
 		try {
 			const cpf = formulario.cpf.replace(/\D/g, "");
-			const respostaUsuarios = await fetch(USERS_ENDPOINT);
+			const respostaUsuarios = await fetch(usersEndpoint);
 			if (!respostaUsuarios.ok) throw new Error("Não foi possível consultar os usuários.");
 
 			const usuarios = await respostaUsuarios.json();
@@ -72,7 +69,6 @@ function Cadastro() {
 			);
 			if (cpfJaCadastrado) throw new Error("Já existe um cadastro com esse CPF.");
 
-			// Campos comuns aos dois tipos; o id é gerado pelo json-server
 			const novoUsuario = {
 				cpf,
 				senha: formulario.senha,
@@ -95,7 +91,7 @@ function Cadastro() {
 				};
 			}
 
-			const respostaCadastro = await fetch(USERS_ENDPOINT, {
+			const respostaCadastro = await fetch(usersEndpoint, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(novoUsuario),
@@ -103,7 +99,6 @@ function Cadastro() {
 
 			if (!respostaCadastro.ok) throw new Error("Não foi possível salvar o cadastro.");
 
-			// O admin continua na página para fazer outros cadastros
 			setSucesso(`${ehPaciente ? "Paciente" : "Médico"} cadastrado com sucesso!`);
 			setFormulario(formularioVazio);
 		} catch (error) {
@@ -117,9 +112,8 @@ function Cadastro() {
 
 	return (
 		<div className="flex min-h-screen w-full flex-col">
-			{/* Header com a mesma cor de fundo da BarraNavegacao */}
 			<header className="w-full bg-[#236B55] px-5 py-4 sm:px-12 xl:py-8">
-				<div className="mx-auto grid w-full max-w-4xl grid-cols-2 gap-3">
+				<div className="mx-auto grid w-full max-w-2xl grid-cols-2 gap-3">
 							<button
 								type="button"
 								className={`${classesBotaoTroca} ${!ehPaciente ? classesBotaoTrocaAtivo : ""}`}
@@ -141,13 +135,13 @@ function Cadastro() {
 
 		<main className="flex w-full flex-1 bg-[#E6F4F1]">
 			<section className="flex w-full flex-1 items-start justify-center px-5 py-8 sm:px-12 sm:py-10">
-					<div className="flex w-full max-w-4xl flex-col items-center">
+					<div className="flex w-full max-w-2xl flex-col items-center">
 
 						<h1 className="mb-6 text-center text-xl font-semibold xl:mb-8 xl:text-3xl text-slate-800">
 							{ehPaciente ? "Cadastro de paciente" : "Cadastro de médico"}
 						</h1>
 
-						<form className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:gap-x-8 xl:gap-y-6" onSubmit={cadastrar}>
+						<form className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:gap-x-8 xl:gap-y-3.5" onSubmit={cadastrar}>
 							<label className="space-y-1 text-xs font-medium text-slate-600 xl:space-y-2 xl:text-base sm:col-span-2">
 								Nome completo
 								<input className={classesInput} name="nome" value={formulario.nome} onChange={atualizarCampo} required />
@@ -164,7 +158,6 @@ function Cadastro() {
 								URL da foto (opcional)
 								<input className={classesInput} name="url" type="url" value={formulario.url} onChange={atualizarCampo} placeholder="https://..." />
 							</label>
-							{/* Campos exclusivos do paciente */}
 							{ehPaciente && (
 							<>
 							<label className="space-y-1 text-xs font-medium text-slate-600 xl:space-y-2 xl:text-base">

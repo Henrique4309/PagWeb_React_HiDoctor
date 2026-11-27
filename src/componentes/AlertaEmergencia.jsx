@@ -1,9 +1,13 @@
-// Formata datas do alerta em pt-BR; se não for uma data válida, mostra o valor original
+import { useEffect } from "react";
+import somAlarme from "../som/alarme_socorro.wav";
+import { fusoBrasilia } from "../datas";
+
 function formatarDataHora(valor) {
   if (!valor) return "--";
   const data = new Date(valor);
   if (Number.isNaN(data.getTime())) return String(valor);
   return data.toLocaleString("pt-BR", {
+    timeZone: fusoBrasilia,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -13,9 +17,31 @@ function formatarDataHora(valor) {
   });
 }
 
-// Tela cheia de emergência: ocupa toda a tela até o médico clicar no botão.
-// alerta: item de /alertas | paciente: usuário de /users dono do alerta | aoFechar: tira o alerta da tela
 function AlertaEmergencia({ alerta, paciente, aoFechar }) {
+  const alertaId = alerta?.id;
+
+  useEffect(() => {
+    if (alertaId == null) return;
+
+    const audio = new Audio(somAlarme);
+    audio.loop = true;
+
+    const tentarTocar = () => {
+      audio.play().catch(() => {
+        window.addEventListener("pointerdown", tentarTocar, { once: true });
+        window.addEventListener("keydown", tentarTocar, { once: true });
+      });
+    };
+    tentarTocar();
+
+    return () => {
+      window.removeEventListener("pointerdown", tentarTocar);
+      window.removeEventListener("keydown", tentarTocar);
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [alertaId]);
+
   if (!alerta) return null;
 
   const nome = paciente?.nome || "Paciente não identificado";
@@ -68,7 +94,7 @@ function AlertaEmergencia({ alerta, paciente, aoFechar }) {
           type="button"
           onClick={aoFechar}
           autoFocus
-          className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#FDF4F4_50%,#EFC9C9_100%)] focus:bg-[linear-gradient(to_bottom,#F4ABAB_0%,#E2B7B7_50%,#EDCACA_100%)] text-slate-800 px-5 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#9C4848] shadow-bottom shadow-neutral-30 xl:w-auto xl:px-[8rem] xl:text-2xl"
+          className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#FDF4F4_50%,#EFC9C9_100%)] focus:bg-[linear-gradient(to_bottom,#F4ABAB_0%,#E2B7B7_50%,#EDCACA_100%)] text-slate-800 px-5 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#9C4848] shadow-bottom xl:w-auto xl:px-[8rem] xl:text-2xl"
         >
           Ciente
         </button>

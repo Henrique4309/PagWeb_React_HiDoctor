@@ -1,3 +1,4 @@
-//url do json-server do nosso banco de dados
-export const JSON_SERVER_URL = "https://api-hidoctor.onrender.com";
-export const USERS_ENDPOINT = `${JSON_SERVER_URL}/users`;
+export const jsonServerUrl = "https://api-hidoctor.onrender.com";
+export const usersEndpoint = `${jsonServerUrl}/users`;
+// export const jsonServerUrl = "http://localhost:3000";
+// export const usersEndpoint = `http://localhost:3000/users`;

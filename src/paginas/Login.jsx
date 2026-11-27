@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { USERS_ENDPOINT } from "../config";
+import { useNavigate } from "react-router-dom";
+import { usersEndpoint } from "../config";
+import { salvarUsuarioSessao } from "../sessao";
 import logo from "../assets/hidoctor_logo 1.png";
+import imagemEnfermeiro from "../assets/hidoctor_login_enfermeiro_senhor 1.png";
 
 function Login() {
   const [cpf, setCpf] = useState("");
@@ -16,8 +18,7 @@ function Login() {
     setCarregando(true);
     try {
       const cpfFormatado = cpf.replace(/\D/g, "");
-      const senhaDigitada = senha.trim();
-      const resposta = await fetch(USERS_ENDPOINT);
+      const resposta = await fetch(usersEndpoint);
       if (!resposta.ok) throw new Error("Erro ao consultar os usuários");
 
       const dados = await resposta.json();
@@ -25,7 +26,7 @@ function Login() {
         (item) => String(item.cpf).replace(/\D/g, "") === cpfFormatado,
       );
 
-      if (!usuario || String(usuario.senha) !== senhaDigitada)
+      if (!usuario || String(usuario.senha) !== senha)
         throw new Error("CPF ou senha incorretos.");
 
       const tipoUsuario = String(usuario.tipo || "").trim().toLowerCase();
@@ -33,7 +34,6 @@ function Login() {
       const ehMedico = tipoUsuario === "medico";
       const ehPaciente = ["paciente", "patient"].includes(tipoUsuario);
 
-      // Tipo salvo na sessão e página de destino de cada perfil
       let tipoSessao;
       let destino;
       if (ehAdmin) {
@@ -51,16 +51,13 @@ function Login() {
         );
       }
 
-      sessionStorage.setItem(
-        "hidoc_usuario",
-        JSON.stringify({
-          id: usuario.id,
-          cpf: String(usuario.cpf ?? "").replace(/\D/g, ""),
-          nome: usuario.nome,
-          url: usuario.url,
-          tipo: tipoSessao,
-        }),
-      );
+      salvarUsuarioSessao({
+        id: usuario.id,
+        cpf: String(usuario.cpf ?? "").replace(/\D/g, ""),
+        nome: usuario.nome,
+        url: usuario.url,
+        tipo: tipoSessao,
+      });
       navigate(destino);
     } catch (error) {
       const mensagem =
@@ -68,28 +65,24 @@ function Login() {
           ? "Erro ao carregar os dados. Verifique se o servidor está iniciado."
           : error.message || "Erro ao conectar ao servidor.";
       setErro(mensagem);
-      console.log(`Erro: ${error.message}`);
     } finally {
       setCarregando(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#E6F4F1] px-4 pb-10 pt-16">
-      <header className="mb-8 text-center">
-       
-      </header>
-      <section className= "mt-10 xl:flex xl:gap-40 xl:items-center xl:justify mx-auto">
-         <div className="xl:flex-col xl:items-center max-w-[650px]">
+    <main className="flex min-h-screen flex-col bg-[#E6F4F1] px-4 pb-10 pt-24">
+      <section className="mt-10 xl:flex xl:gap-40 xl:items-center mx-auto">
+         <div className="max-w-[650px]">
            <img
-            className="mx-auto "
+            className="mx-auto"
             src={logo}
-            alt=""
+            alt="HiDoctor"
                    />
-                   <form className="space-y-5 xl:flex xl:flex-col xl:ml-30" onSubmit={entrar}>
-            <div className="space-y-1">
+                   <form className="space-y-5 xl:flex xl:flex-col" onSubmit={entrar}>
+            <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-medium text-slate-700 xl:text-base"
                 htmlFor="cpf"
               >
                 CPF
@@ -108,9 +101,9 @@ function Login() {
                 placeholder="046.."
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-medium text-slate-700 xl:text-base"
                 htmlFor="senha"
               >
                 Senha
@@ -134,18 +127,16 @@ function Login() {
               </p>
             )}
             <button
-              className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 px-6 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-bottom  shadow-neutral-30 xl:mt-30 xl:px-30"
+              className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 px-6 py-3 rounded-lg font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-bottom"
               type="submit"
               disabled={carregando}
             >
               {carregando ? "Verificando..." : "Entrar"}
             </button>
-            <p className="text-center text-sm text-slate-600">
-            </p>
                    </form>
          </div>
       <div className="hidden xl:block mt-28 ">
-        <img src="src/assets/hidoctor_login_enfermeiro_senhor 1.png" alt="" />
+        <img src={imagemEnfermeiro} alt="" />
       </div>
       </section>
       

@@ -7,36 +7,38 @@ import {
   YAxis,
   Tooltip
 } from "recharts";
-import { MEDIDAS, useMedicoes, calcularDominioY } from "../hooks/useMedicoes";
+import { medidas, useMedicoes, calcularDominioY } from "../hooks/useMedicoes";
 
-// Gráfico das últimas medições do paciente.
-// cpfPaciente: CPF de quem teve as medições registradas
-// medida: chave de MEDIDAS ("oxigenio", "respiratoria" ou "cardiaca")
-function Grafico({ cpfPaciente, medida }) {
-  const medidaAtual = MEDIDAS[medida];
+function Grafico({ cpfPaciente, medida, dia = null, historico = null }) {
+  const medidaAtual = medidas[medida];
+  const modoHistorico = Boolean(dia && historico);
 
-  // Últimas 10 medições do db.json (completadas com 0), atualizadas automaticamente
-  const dadosGrafico = useMedicoes(cpfPaciente, medida);
-  const dominioY = calcularDominioY(dadosGrafico);
+  const ultimasMedicoes = useMedicoes(modoHistorico ? "" : cpfPaciente, medida);
+  const dadosGrafico = modoHistorico ? historico.pontos : ultimasMedicoes;
+  const dominioY = calcularDominioY(dadosGrafico, medida);
+  const mostrarPontos = dadosGrafico.length <= 30;
+
+  const subtitulo = modoHistorico
+    ? `Histórico de ${dia.toLocaleDateString("pt-BR")}${
+        historico.carregando ? " (carregando…)" : historico.pontos.length ? "" : " · sem medições"
+      }`
+    : "Últimas medições";
 
   return (
     <section className="w-[85%] max-w-[500px] mx-auto mt-5 mb-4 xl:col-start-2 xl:row-start-1 xl:w-full xl:max-w-[780px] xl:mt-8">
 
-      {/* Fundo azul externo */}
       <div className="bg-[#D9EDF3] rounded-xl p-3 shadow-[0_3px_5px_rgba(0,0,0,0.12)] border border-[#C5E1E9]">
 
-        {/* Título */}
         <div className="mb-2 ml-1">
-          <h2 className="text-sm font-semibold text-slate-600 xl:xl:text-lg">
+          <h2 className="text-sm font-semibold text-slate-600 xl:text-lg">
             {medidaAtual.titulo}
           </h2>
 
           <p className="text-[10px] text-slate-400">
-            {medidaAtual.unidade}
+            {medidaAtual.unidade} · {subtitulo}
           </p>
         </div>
 
-        {/* Área branca do gráfico */}
         <div className="bg-white rounded-md p-2 shadow-sm">
 
           <div className="w-full h-[195px] xl:h-[240px]">
@@ -81,6 +83,8 @@ function Grafico({ cpfPaciente, medida }) {
                   tick={{ fontSize: 9, fill: "#8299A0" }}
                   axisLine={{ stroke: "#DCECEF" }}
                   tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={16}
                 />
 
                 <YAxis
@@ -97,7 +101,10 @@ function Grafico({ cpfPaciente, medida }) {
                     border: "1px solid #D9EDF3",
                     fontSize: "11px"
                   }}
-                  formatter={(value) => [`${value}${medidaAtual.sufixo}`, medidaAtual.rotulo]}
+                  formatter={(value) => [
+                    value == null ? "--" : `${value}${medidaAtual.sufixo}`,
+                    medidaAtual.rotulo,
+                  ]}
                 />
 
                 <Area
@@ -107,13 +114,12 @@ function Grafico({ cpfPaciente, medida }) {
                   stroke="#62BBAA"
                   strokeWidth={2}
                   fill="url(#corOxigenacao)"
-                  dot={{
-                    r: 3,
-                    fill: "#FFFFFF",
-                    stroke: "#62BBAA",
-                    strokeWidth: 2
-                  }}
-                  activeDot={{ r: 5 }}
+                  dot={
+                    mostrarPontos
+                      ? { r: 3, fill: "#FFFFFF", stroke: "#62BBAA", strokeWidth: 2 }
+                      : false
+                  }
+                  activeDot={{ r: mostrarPontos ? 5 : 3 }}
                 />
 
               </AreaChart>

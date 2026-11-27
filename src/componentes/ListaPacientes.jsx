@@ -1,133 +1,68 @@
-import { useEffect, useState } from "react";
-import { USERS_ENDPOINT } from "../config";
+import { useEffect, useMemo, useState } from "react";
+import { usersEndpoint } from "../config";
 import { LuCircleAlert, LuSearch } from "react-icons/lu";
 import { IoAlertCircle } from "react-icons/io5";
 import DadosPaciente from "./DadosPaciente";
 
-const pacientesPrioritariosKEY = "hidoc_pacientes_prioritarios";
-
-// Cada médico tem sua própria lista de prioritários no localStorage.
-function chavePrioritarios(medicoId) {
-    return medicoId != null
-        ? `${pacientesPrioritariosKEY}_${medicoId}`
-        : null;
-}
-
-function carregarPacientesPrioritarios(medicoId) {
-    const chave = chavePrioritarios(medicoId);
-    if (!chave) return [];
-
-    try {
-        const pacientesSalvos = JSON.parse(
-            localStorage.getItem(chave) || "[]",
-        );
-
-        return Array.isArray(pacientesSalvos)
-            ? pacientesSalvos.filter(
-                  (paciente) => paciente && paciente.id != null && paciente.nome,
-              )
-            : [];
-    } catch (erro) {
-        console.error("Erro ao carregar pacientes prioritários:", erro);
-        return [];
-    }
-}
-
-function ListarPacientes({ medicoId, aoMudarSemResultado }) {
+function ListarPacientes({ idsPrioritarios, aoAlternarPrioridade, aoMudarSemResultado }) {
     const [pacientes, setPacientes] = useState([]);
     const [pacienteSelecionado, setPacienteSelecionado] = useState(null);
     const [busca, setBusca] = useState("");
-    // false até a primeira busca de pacientes terminar
     const [carregou, setCarregou] = useState(false);
-    const [pacientesPrioritarios, setPacientesPrioritarios] = useState(() =>
-        carregarPacientesPrioritarios(medicoId),
-    );
+    const [erroCarregamento, setErroCarregamento] = useState("");
 
     useEffect(() => {
         async function buscarPaciente() {
             try {
-                const resposta = await fetch(USERS_ENDPOINT);
+                const resposta = await fetch(usersEndpoint);
                 if (!resposta.ok) throw new Error("Erro ao buscar os pacientes");
                 const dados = await resposta.json();
-                const idsPrioritarios = new Set(
-                    pacientesPrioritarios.map((paciente) => String(paciente.id)),
-                );
-                const pacientesDaApi = dados.filter(
-                    (usuario) => usuario.tipo === "paciente",
-                );
-
                 setPacientes(
-                    pacientesDaApi.sort(
-                        (pacienteA, pacienteB) =>
-                            Number(idsPrioritarios.has(String(pacienteB.id))) -
-                            Number(idsPrioritarios.has(String(pacienteA.id))),
+                    (Array.isArray(dados) ? dados : []).filter(
+                        (usuario) => usuario.tipo === "paciente",
                     ),
                 );
+                setErroCarregamento("");
             } catch (erro) {
-                console.log("Erro: " + erro.message);
+                console.error(erro);
+                setErroCarregamento(
+                    "Não foi possível carregar os pacientes. Verifique a conexão com o servidor.",
+                );
             } finally {
                 setCarregou(true);
             }
         }
         buscarPaciente();
-    }, [pacientesPrioritarios]);
+    }, []);
 
-    function alternarPrioridade(pacienteSelecionado) {
-        const pacienteJaPrioritario = pacientesPrioritarios.some(
-            (paciente) =>
-                String(paciente.id) === String(pacienteSelecionado.id),
-        );
-        const pacientesAtualizados = pacienteJaPrioritario
-            ? pacientesPrioritarios.filter(
-                  (paciente) =>
-                      String(paciente.id) !== String(pacienteSelecionado.id),
-              )
-            : [
-                  {
-                      id: pacienteSelecionado.id,
-                      nome: pacienteSelecionado.nome,
-                  },
-                  ...pacientesPrioritarios,
-              ];
-
-        const chave = chavePrioritarios(medicoId);
-        if (!chave) {
-            console.error("Médico não identificado: prioridade não salva.");
-            return;
-        }
-
-        try {
-            if (pacientesAtualizados.length === 0) {
-                localStorage.removeItem(chave);
-            } else {
-                localStorage.setItem(
-                    chave,
-                    JSON.stringify(pacientesAtualizados),
-                );
-            }
-            setPacientesPrioritarios(pacientesAtualizados);
-        } catch (erro) {
-            console.error("Erro ao salvar paciente prioritário:", erro);
-        }
-    }
+    const pacientesOrdenados = useMemo(
+        () =>
+            [...pacientes].sort(
+                (pacienteA, pacienteB) =>
+                    Number(idsPrioritarios.has(String(pacienteB.id))) -
+                    Number(idsPrioritarios.has(String(pacienteA.id))),
+            ),
+        [pacientes, idsPrioritarios],
+    );
 
     const termoBusca = busca.trim().toLowerCase();
     const pacientesFiltrados = termoBusca
-        ? pacientes.filter(
+        ? pacientesOrdenados.filter(
               (paciente) =>
                   paciente.nome?.toLowerCase().includes(termoBusca) ||
                   paciente.informacoes?.enfermidade
                       ?.toLowerCase()
                       .includes(termoBusca),
           )
-        : pacientes;
+        : pacientesOrdenados;
 
-    // Avisa a página quando nenhum paciente aparece na lista (para trocar o fundo do main)
-    // Só avisa depois do carregamento, para a imagem não piscar ao abrir a página
     const semResultado =
-        carregou && !pacienteSelecionado && pacientesFiltrados.length === 0;
+        carregou &&
+        !erroCarregamento &&
+        !pacienteSelecionado &&
+        pacientesFiltrados.length === 0;
     useEffect(() => {
-        aoMudarSemResultado?.(semResultado);
+        aoMudarSemResultado(semResultado);
     }, [semResultado, aoMudarSemResultado]);
 
     if (pacienteSelecionado) {
@@ -152,8 +87,19 @@ function ListarPacientes({ medicoId, aoMudarSemResultado }) {
                 className="w-full bg-[linear-gradient(to_bottom,#FFFFFF_0%,#F4FDFD_50%,#C9E6EF_100%)] focus:bg-[linear-gradient(to_bottom,#ABE1F4_0%,#B7E2E0_50%,#CAEDEB_100%)] text-slate-800 py-3 pl-12 pr-4 rounded-xl font-medium transition-all outline-none focus:ring-2 ring-[#48799C] shadow-md"
             />
         </div>
-        <div className="w-[95%] m-auto grid grid-cols-1 align-items-center justify-items-center xl:grid-cols-3 gap-4">
-            {pacientesFiltrados.map((paciente) => (
+        {erroCarregamento && (
+            <p
+                role="alert"
+                className="w-[95%] xl:w-[60%] mx-auto mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 xl:text-base"
+            >
+                {erroCarregamento}
+            </p>
+        )}
+        <div className="w-[95%] m-auto grid grid-cols-1 justify-items-center xl:grid-cols-3 gap-4">
+            {pacientesFiltrados.map((paciente) => {
+                const informacoes = paciente.informacoes || {};
+                const prioritario = idsPrioritarios.has(String(paciente.id));
+                return (
                 <div
                     role="button"
                     tabIndex={0}
@@ -164,25 +110,21 @@ function ListarPacientes({ medicoId, aoMudarSemResultado }) {
                             setPacienteSelecionado(paciente);
                         }
                     }}
-                    className="w-full flex items-center gap-4 rounded-xl border p-4 shadow-md cursor-pointer bg-gradient-to-b from-white via-white via-65% to-[#CBE6F2]" key={paciente.id}>
+                    className={`w-full flex items-center gap-4 rounded-xl border p-4 shadow-md cursor-pointer bg-gradient-to-b from-white via-white via-65% transition-colors ${prioritario ? "to-[#EFC9C9] border-[#EFC9C9]" : "to-[#CBE6F2]"}`} key={paciente.id}>
                     <img src={paciente.url} alt="Imagem do Paciente" className="w-16 h-16 object-cover rounded-full" />
                     <div className="w-[80%] 2xl:w-[90%]">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold">{paciente.nome}</h2>
                             <button
                                 type="button"
-                                aria-label={`${pacientesPrioritarios.some((pacientePrioritario) => String(pacientePrioritario.id) === String(paciente.id)) ? "Despriorizar" : "Priorizar"} ${paciente.nome}`}
+                                aria-label={`${prioritario ? "Despriorizar" : "Priorizar"} ${paciente.nome}`}
                                 onClick={(evento) => {
                                     evento.stopPropagation();
-                                    alternarPrioridade(paciente);
+                                    aoAlternarPrioridade(paciente);
                                 }}
                                 onKeyDown={(evento) => evento.stopPropagation()}
                             >
-                                {pacientesPrioritarios.some(
-                                    (pacientePrioritario) =>
-                                        String(pacientePrioritario.id) ===
-                                        String(paciente.id),
-                                ) ? (
+                                {prioritario ? (
                                     <IoAlertCircle className="h-6 w-6 text-red-500" />
                                 ) : (
                                     <LuCircleAlert className="h-5 w-5 text-yellow-500" />
@@ -190,16 +132,17 @@ function ListarPacientes({ medicoId, aoMudarSemResultado }) {
                             </button>
                         </div>
                         <ul className="flex gap-2">
-                            <li className="font-semibold">{paciente.informacoes.idade} anos,</li>
-                            <li className="font-semibold">{paciente.informacoes.peso} kg,</li>
-                            <li className="font-semibold">{paciente.informacoes.altura} m</li>
+                            <li className="font-semibold">{informacoes.idade} anos,</li>
+                            <li className="font-semibold">{informacoes.peso} kg,</li>
+                            <li className="font-semibold">{informacoes.altura} m</li>
                         </ul>
-                        <p className="font-semibold">{paciente.informacoes.enfermidade}</p>
+                        <p className="font-semibold">{informacoes.enfermidade}</p>
                     </div>
                 </div>
-            ))}
+                );
+            })}
         </div>
         </>
     );
-};
+}
 export default ListarPacientes
